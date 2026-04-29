@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Private Pickleball DUPR Dashboard v7 Mobile</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;background:#0f172a;color:#f8fafc}
+header{padding:16px;background:#1e293b;position:sticky;top:0;z-index:10}
+h1{font-size:1.2rem;margin:0}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#1e293b;border-top:1px solid #334155}
+nav button{flex:1;padding:14px;border:none;background:none;color:white;font-size:.9rem}
+main{padding:16px 16px 80px}
+.card{background:#1e293b;border-radius:12px;padding:16px;margin-bottom:16px}
+input,button.action{width:100%;padding:12px;margin-top:8px;border-radius:8px;border:1px solid #475569;box-sizing:border-box}
+button.action{background:#2563eb;color:white;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:.85rem;display:block;overflow-x:auto}
+th,td{padding:8px;border-bottom:1px solid #334155;text-align:left}
+.hidden{display:none}
+</style>
+<script>
+function showTab(id){
+ document.querySelectorAll('.tab').forEach(t=>t.classList.add('hidden'));
+ document.getElementById(id).classList.remove('hidden');
+}
+</script>
+</head>
+<body>
+<header><h1>Private Pickleball DUPR Dashboard v7</h1></header>
+<main>
+<section id="players" class="tab">
+<div class="card">
+<h2>Player Management</h2>
+<input placeholder="Player Name">
+<input placeholder="Starting Rating (e.g. 3.5)">
+<button class="action">Add / Update Player</button>
+</div>
+</section>
+
+<section id="matches" class="tab hidden">
+<div class="card">
+<h2>Log Match</h2>
+<input placeholder="Team A Player 1">
+<input placeholder="Team A Player 2">
+<input placeholder="Team B Player 1">
+<input placeholder="Team B Player 2">
+<input placeholder="Team A Score">
+<input placeholder="Team B Score">
+<button class="action">Save Match</button>
+</div>
+</section>
+
+<section id="leaderboard" class="tab hidden">
+<div class="card">
+<h2>Leaderboard</h2>
+<table>
+<thead><tr><th>Player</th><th>Rating</th><th>Matches</th></tr></thead>
+<tbody><tr><td>Example Player</td><td>3.50</td><td>0</td></tr></tbody>
+</table>
+</div>
+</section>
+
+<section id="cloud" class="tab hidden">
+<div class="card">
+<h2>Cloud Sync</h2>
+<input placeholder="Paste Google Apps Script /exec URL">
+<button class="action">Save Endpoint</button>
+<button class="action">Load Cloud Data</button>
+</div>
+</section>
+</main>
+
+<nav>
+<button onclick="showTab('players')">Players</button>
+<button onclick="showTab('matches')">Matches</button>
+<button onclick="showTab('leaderboard')">Rankings</button>
+<button onclick="showTab('cloud')">Cloud</button>
+</nav>
+</body>
+</html>
