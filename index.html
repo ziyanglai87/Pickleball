@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Private Pickleball Mock DUPR Dashboard v6</title>
+<style>
+:root{--bg:#0f172a;--panel:#111827;--panel2:#1f2937;--text:#f8fafc;--muted:#9ca3af;--line:#334155;--accent:#38bdf8;--good:#22c55e;--warn:#f59e0b;--bad:#ef4444;--card:#172033}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(120deg,#0b1120,#111827);color:var(--text)}
+header{padding:24px 28px;border-bottom:1px solid var(--line);background:rgba(15,23,42,.9)}h1{margin:0;font-size:24px}header p{margin:6px 0 0;color:var(--muted)}
+.container{padding:22px;max-width:1400px;margin:auto}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.card{background:rgba(17,24,39,.92);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 8px 22px rgba(0,0,0,.22)}
+.kpi{grid-column:span 3}.wide{grid-column:span 12}.half{grid-column:span 6}.third{grid-column:span 4}.two{grid-column:span 8}
+.kpi .value{font-size:32px;font-weight:800;margin-top:6px}.label,.muted{color:var(--muted);font-size:13px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.tab{border:1px solid var(--line);background:#0b1220;color:var(--text);padding:10px 14px;border-radius:999px;cursor:pointer}.tab.active{background:var(--accent);color:#062033;border-color:var(--accent);font-weight:700}
+input,select,textarea,button{font:inherit}textarea,input,select{width:100%;background:#0b1220;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px}textarea{min-height:180px}.btn{background:var(--accent);color:#062033;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}.btn.secondary{background:#334155;color:var(--text)}.btn.danger{background:var(--bad);color:white}.row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.row>*{flex:1;min-width:140px}.controls{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{color:#cbd5e1;background:#0b1220;position:static}td.num{text-align:right;font-variant-numeric:tabular-nums}.pill{border-radius:999px;padding:4px 8px;display:inline-block;font-size:12px}.good{background:rgba(34,197,94,.18);color:#86efac}.bad{background:rgba(239,68,68,.18);color:#fca5a5}.warn{background:rgba(245,158,11,.18);color:#fcd34d}.accent{color:var(--accent)}
+svg{width:100%;height:260px;background:#0b1220;border:1px solid var(--line);border-radius:12px}.small{font-size:12px}.hidden{display:none}.page{display:none}.page.active-page{display:block}.footer{color:var(--muted);font-size:12px;margin-top:20px}.notice{border-left:4px solid var(--accent);padding:10px 12px;background:#0b1220;border-radius:8px;color:#cbd5e1}.scroll{overflow:auto;max-height:520px}.formgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.formgrid label{font-size:12px;color:var(--muted)}
+@media(max-width:900px){.kpi,.half,.third,.two{grid-column:span 12}.formgrid{grid-template-columns:1fr 1fr}.row>*{min-width:100%}}
+</style>
+</head>
+<body>
+<header><h1>Private Pickleball Mock DUPR Dashboard <span class="pill accent">v6</span></h1><p>Doubles-only rating tracker. Provisional, point-share-based mock rating model; player management; shared Google Sheets sync; CSV import/export.</p></header>
+<div class="container">
+<div class="notice"><b>Important:</b> This is a private mock model. DUPR is proprietary. This version is calibrated to behave more like provisional/unrated ratings by using point share, opponent strength, and high early volatility.</div>
+<div class="tabs">
+<button class="tab active" data-tab="dashboard">Dashboard</button><button class="tab" data-tab="entry">Match Entry</button><button class="tab" data-tab="players">Players</button><button class="tab" data-tab="trends">Player Trends</button><button class="tab" data-tab="partners">Partner Chemistry</button><button class="tab" data-tab="h2h">Head-to-Head</button><button class="tab" data-tab="history">Match History</button><button class="tab" data-tab="import">Import / Export</button><button class="tab" data-tab="cloud">Cloud Sync</button><button class="tab" data-tab="model">Model</button>
+</div>
+<section id="dashboard" class="page active-page"><div class="grid"><div class="card kpi"><div class="label">Players</div><div class="value" id="kPlayers">0</div></div><div class="card kpi"><div class="label">Matches</div><div class="value" id="kMatches">0</div></div><div class="card kpi"><div class="label">Highest Rating</div><div class="value" id="kHigh">-</div></div><div class="card kpi"><div class="label">Most Active</div><div class="value" id="kActive">-</div></div><div class="card two"><h3>Leaderboard</h3><div class="scroll"><table id="leaderboard"></table></div></div><div class="card third"><h3>Recent Form</h3><div id="recentForm"></div></div><div class="card wide"><h3>Rating Snapshot</h3><svg id="ratingBar"></svg></div></div></section>
+<section id="entry" class="page hidden"><div class="card"><h3>Add Match</h3><div class="formgrid"><label>Date<input id="mDate" type="date"></label><label>Type<select id="mType"><option>Doubles</option></select></label><label>Team A P1<select id="a1"></select></label><label>Team A P2<select id="a2"></select></label><label>Team B P1<select id="b1"></select></label><label>Team B P2<select id="b2"></select></label><label>Team A Score<input id="as" type="number" min="0" value="11"></label><label>Team B Score<input id="bs" type="number" min="0" value="8"></label><label>Notes<input id="notes" placeholder="optional"></label></div><div class="controls"><button class="btn" onclick="addMatch()">Add Match</button><button class="btn secondary" onclick="clearMatches()">Clear Matches</button></div><p class="muted">Validation checks duplicate players and missing score. After adding, ratings recalculate automatically.</p></div></section>
+<section id="players" class="page hidden"><div class="grid"><div class="card half"><h3>Player Management</h3><p class="muted">Add new players, edit starting seed rating, or deactivate players without breaking match history.</p><input id="pOriginalName" type="hidden"><div class="row"><label>Player name<input id="pName" placeholder="Player name"></label><label>Seed rating<input id="pRating" type="number" step="0.001" value="3.000"></label><label>Status<select id="pActive"><option value="true">Active</option><option value="false">Inactive</option></select></label></div><label>Notes<input id="pNotes" placeholder="optional"></label><div class="controls"><button class="btn" onclick="savePlayerForm()">Save Player</button><button class="btn secondary" onclick="clearPlayerForm()">Clear Form</button></div><div id="playerStatus" class="muted"></div></div><div class="card half"><h3>Player List</h3><p class="muted">Inactive players are hidden from match-entry dropdowns but retained for historical stats.</p><div class="scroll"><table id="playersTable"></table></div></div></div></section>
+<section id="trends" class="page hidden"><div class="card"><h3>Player Trends</h3><div class="row"><select id="trendPlayer" onchange="renderAll()"></select></div><svg id="trendChart"></svg><div id="trendStats"></div></div></section>
+<section id="partners" class="page hidden"><div class="card"><h3>Partner Chemistry</h3><div class="scroll"><table id="partnerTable"></table></div></div></section>
+<section id="h2h" class="page hidden"><div class="card"><h3>Head-to-Head</h3><div class="row"><select id="h2hPlayer" onchange="renderAll()"></select></div><div class="scroll"><table id="h2hTable"></table></div></div></section>
+<section id="history" class="page hidden"><div class="card"><h3>Match History</h3><div class="scroll"><table id="matchHistory"></table></div></div></section>
+<section id="import" class="page hidden"><div class="grid"><div class="card half"><h3>Import Match CSV</h3><p class="muted">Paste CSV exported from Google Sheets Match_Log. Headers should match the template.</p><textarea id="csvInput"></textarea><div class="controls"><button class="btn" onclick="importCsv()">Import CSV / TSV</button><button class="btn secondary" onclick="loadSample()">Load Sample</button></div><div id="importStatus" class="muted"></div></div><div class="card half"><h3>Export</h3><div class="controls"><button class="btn" onclick="downloadCsv()">Download Match CSV</button><button class="btn secondary" onclick="copyCsv()">Copy CSV</button><button class="btn danger" onclick="resetAll()">Reset All Data</button></div><textarea id="csvOutput" readonly></textarea></div></div></section>
+
+<section id="cloud" class="page hidden"><div class="grid"><div class="card half"><h3>Cloud Sync: Shared Google Sheet</h3><p class="muted">Use this when different devices need to see the same player list, matches and model settings. One person updates; everyone loads the latest shared data.</p><label>Apps Script Web App URL<input id="cloudUrl" placeholder="Paste the /exec URL from your deployed Apps Script web app"></label><div class="controls"><button class="btn" onclick="saveCloudConfig()">Save URL</button><button class="btn secondary" onclick="loadFromCloud()">Load from Cloud</button><button class="btn" onclick="saveToCloud()">Save to Cloud</button></div><label class="muted"><input id="autoSync" type="checkbox" style="width:auto;margin-right:8px" onchange="saveCloudConfig()"> Auto-save to cloud after each local change</label><div id="cloudStatus" class="notice" style="margin-top:12px">Cloud sync is not configured yet.</div></div><div class="card half"><h3>Setup Steps</h3><ol class="muted" style="line-height:1.7"><li>Create a Google Sheet with 3 tabs: <b>Players</b>, <b>Matches</b>, <b>Settings</b>.</li><li>Open <b>Extensions → Apps Script</b>.</li><li>Paste the Apps Script code from the file provided with this dashboard.</li><li>Deploy as <b>Web app</b>. Execute as yourself. Access: anyone with the link.</li><li>Paste the deployment <b>/exec</b> URL here and click <b>Save URL</b>.</li></ol><p class="muted"><b>Sync rule:</b> last save wins. Use Load from Cloud before making edits if someone else may have updated the sheet.</p></div></div></section>
+<section id="model" class="page hidden"><div class="card"><h3>Mock Rating Model — Provisional Point-Share Version</h3><div class="row"><label>Provisional K<input id="baseK" type="number" step="0.01" value="1.15"></label><label>Mature K<input id="matureK" type="number" step="0.01" value="0.25"></label><label>Provisional Games<input id="provisionalGames" type="number" step="1" value="10"></label><label>Scale<input id="scale" type="number" step="0.1" value="1.5"></label><label>Min Rating<input id="minR" type="number" step="0.1" value="2.0"></label><label>Max Rating<input id="maxR" type="number" step="0.1" value="6.0"></label><button class="btn" onclick="saveSettings()">Save Settings</button></div><p class="muted">Expected point share = 1 / (1 + 10^((Opponent Team Rating - Your Team Rating) / Scale)). Actual point share = team points / total points. Early/unrated players use the higher Provisional K, then taper toward Mature K.</p><div class="notice"><b>Calibration reference:</b> Two unrated 3.500-seeded players losing 11–15 to a 3.343/3.013 pair, then 5–15 to a 3.460/3.643 pair should land around 3.10–3.12 with default settings.</div></div></section>
+<script>
+const samplePlayers=[{name:'Zi Yang',rating:3,active:true},{name:'Alex',rating:3,active:true},{name:'Ben',rating:3,active:true},{name:'Chris',rating:3,active:true},{name:'Daniel',rating:3,active:true},{name:'Ethan',rating:3,active:true}];
+const sampleMatches=[['2026-04-01','Doubles','Zi Yang','Alex','Ben','Chris',11,8,'Sample'],['2026-04-05','Doubles','Zi Yang','Ben','Alex','Daniel',9,11,'Sample'],['2026-04-08','Doubles','Chris','Daniel','Zi Yang','Ethan',7,11,'Sample'],['2026-04-12','Doubles','Zi Yang','Chris','Alex','Ben',11,6,'Sample']];
+let players=JSON.parse(localStorage.getItem('pb_players')||'null')||samplePlayers;let matches=JSON.parse(localStorage.getItem('pb_matches')||'null')||sampleMatches;let settings=JSON.parse(localStorage.getItem('pb_settings')||'null')||{baseK:1.15,matureK:.25,provisionalGames:10,scale:1.5,minR:2,maxR:6};
+function normalisePlayers(){players=(players||[]).map(p=>({name:String(p.name||'').trim(),rating:+p.rating||3,active:p.active!==false,notes:p.notes||''})).filter(p=>p.name);}
+normalisePlayers();
+settings={baseK:settings.baseK??1.15,matureK:settings.matureK??.25,provisionalGames:settings.provisionalGames??10,scale:settings.scale??1.5,minR:settings.minR??2,maxR:settings.maxR??6};let calc=null;
+let cloud=JSON.parse(localStorage.getItem('pb_cloud')||'null')||{url:'',auto:false};
+function save(){localStorage.setItem('pb_players',JSON.stringify(players));localStorage.setItem('pb_matches',JSON.stringify(matches));localStorage.setItem('pb_settings',JSON.stringify(settings)); if(cloud.auto && cloud.url){queueCloudSave();}}
+function q(id){return document.getElementById(id)};function fmt(x,d=3){return Number(x).toFixed(d)};function pct(x){return (x*100).toFixed(0)+'%'};function pair(a,b){return [a,b].sort().join(' / ')}
+function effectiveK(games){const pg=Math.max(1,+settings.provisionalGames||10), start=+settings.baseK||1.15, mature=+settings.matureK||0.25;if(games<=0)return start;if(games>=pg)return mature;return start-((start-mature)*(games/pg));}
+function calcRatings(){normalisePlayers();let st={};players.forEach(p=>st[p.name]={rating:+p.rating||3.5,active:p.active!==false,notes:p.notes||'',games:0,w:0,l:0,partners:new Set(),opps:new Set(),trend:[{i:0,r:+p.rating||3.5}]});let hist=[];let ordered=matches.map((m,i)=>({m,i})).sort((x,y)=>String(x.m[0]).localeCompare(String(y.m[0]))||x.i-y.i);
+ordered.forEach(({m,i},idx)=>{let [date,type,a1,a2,b1,b2,as,bs,notes]=m;[a1,a2,b1,b2].forEach(n=>{if(n&&!st[n])st[n]={rating:3.5,active:true,notes:'Auto-added from match history',games:0,w:0,l:0,partners:new Set(),opps:new Set(),trend:[{i:0,r:3.5}]}});as=+as;bs=+bs;if(!a1||!a2||!b1||!b2||isNaN(as)||isNaN(bs)||as+bs<=0)return;let ar=(st[a1].rating+st[a2].rating)/2,br=(st[b1].rating+st[b2].rating)/2;let expA=1/(1+Math.pow(10,(br-ar)/settings.scale));let actA=as/(as+bs);let rawDelta=actA-expA;let aw=as>bs;let playersA=[a1,a2],playersB=[b1,b2];let deltaA=0;playersA.forEach(p=>{let d=effectiveK(st[p].games)*rawDelta;deltaA+=d;st[p].rating=Math.max(settings.minR,Math.min(settings.maxR,st[p].rating+d));st[p].games++;aw?st[p].w++:st[p].l++;st[p].partners.add(p===a1?a2:a1);playersB.forEach(o=>st[p].opps.add(o));st[p].trend.push({i:idx+1,r:st[p].rating,date});});playersB.forEach(p=>{let d=-effectiveK(st[p].games)*rawDelta;st[p].rating=Math.max(settings.minR,Math.min(settings.maxR,st[p].rating+d));st[p].games++;aw?st[p].l++:st[p].w++;st[p].partners.add(p===b1?b2:b1);playersA.forEach(o=>st[p].opps.add(o));st[p].trend.push({i:idx+1,r:st[p].rating,date});});hist.push({idx:idx+1,date,a1,a2,b1,b2,as,bs,expA,actA,delta:deltaA/2,win:aw?'Team A':'Team B',notes});});
+Object.values(st).forEach(s=>s.conf=Math.min(100,Math.max(0,(s.games/(+settings.provisionalGames||10))*70+s.partners.size*3+s.opps.size*2)));return {st,hist};}
+function renderAll(){calc=calcRatings();renderSelects();renderDashboard();renderPlayers();renderTrend();renderPartners();renderH2H();renderHistory();q('csvOutput').value=toCsv();}
+function renderSelects(){let activeOpts=Object.entries(calc.st).filter(([n,s])=>s.active!==false).map(([n])=>n).sort().map(n=>`<option>${n}</option>`).join('');let allOpts=Object.keys(calc.st).sort().map(n=>`<option>${n}</option>`).join('');['a1','a2','b1','b2'].forEach(id=>{let el=q(id),v=el.value;el.innerHTML='<option></option>'+activeOpts;if(v)el.value=v;});['trendPlayer','h2hPlayer'].forEach(id=>{let el=q(id),v=el.value;el.innerHTML='<option></option>'+allOpts;if(v)el.value=v;});if(!q('mDate').value)q('mDate').value=new Date().toISOString().slice(0,10);}
+function renderDashboard(){let all=Object.entries(calc.st).map(([name,s])=>({name,...s}));let arr=all.filter(p=>p.active!==false).sort((a,b)=>b.rating-a.rating);q('kPlayers').textContent=arr.length;q('kMatches').textContent=matches.length;q('kHigh').textContent=arr[0]?`${arr[0].name} ${fmt(arr[0].rating)}`:'-';let most=[...arr].sort((a,b)=>b.games-a.games)[0];q('kActive').textContent=most?`${most.name} (${most.games})`:'-';q('leaderboard').innerHTML='<tr><th>#</th><th>Player</th><th>Rating</th><th>Games</th><th>W-L</th><th>Win %</th><th>Confidence</th></tr>'+arr.map((p,i)=>`<tr><td>${i+1}</td><td>${p.name}</td><td class="num"><b>${fmt(p.rating)}</b></td><td class="num">${p.games}</td><td>${p.w}-${p.l}</td><td class="num">${p.games?pct(p.w/p.games):'0%'}</td><td><span class="pill ${p.conf>=70?'good':p.conf>=45?'warn':'bad'}">${Math.round(p.conf)}%</span></td></tr>`).join('');let rf=arr.map(p=>{let t=p.trend, ch=t.length>1?p.rating-t[Math.max(0,t.length-4)].r:0;return `<p><b>${p.name}</b><br><span class="${ch>=0?'good':'bad'} pill">${ch>=0?'+':''}${fmt(ch)}</span> last 3 appearances</p>`}).join('');q('recentForm').innerHTML=rf;barChart('ratingBar',arr.slice().reverse().map(p=>({label:p.name,value:p.rating})),2,6);}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function safeName(n){return String(n).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function renderPlayers(){let arr=Object.entries(calc.st).map(([name,s])=>({name,...s})).sort((a,b)=>a.name.localeCompare(b.name));q('playersTable').innerHTML='<tr><th>Player</th><th>Status</th><th>Seed</th><th>Current</th><th>Games</th><th>Confidence</th><th>Actions</th></tr>'+arr.map(p=>{let seed=(players.find(x=>x.name===p.name)||{rating:3,active:p.active}).rating;let status=p.active===false?'<span class="pill warn">Inactive</span>':'<span class="pill good">Active</span>';let n=safeName(p.name);return `<tr><td><b>${esc(p.name)}</b>${p.notes?`<br><span class="muted">${esc(p.notes)}</span>`:''}</td><td>${status}</td><td class="num">${fmt(seed)}</td><td class="num"><b>${fmt(p.rating)}</b></td><td class="num">${p.games}</td><td>${Math.round(p.conf)}%</td><td><button class="btn secondary" onclick="editPlayer('${n}')">Edit</button> <button class="btn secondary" onclick="togglePlayer('${n}')">${p.active===false?'Reactivate':'Deactivate'}</button> <button class="btn danger" onclick="hardDeletePlayer('${n}')">Delete</button></td></tr>`}).join('');}
+function clearPlayerForm(){q('pOriginalName').value='';q('pName').value='';q('pRating').value='3.000';q('pActive').value='true';q('pNotes').value='';q('playerStatus').textContent='';}
+function editPlayer(name){let p=players.find(x=>x.name===name)||{name,rating:3,active:true,notes:''};q('pOriginalName').value=p.name;q('pName').value=p.name;q('pRating').value=fmt(p.rating);q('pActive').value=String(p.active!==false);q('pNotes').value=p.notes||'';q('playerStatus').textContent='Editing '+p.name;showPage('players');}
+function savePlayerForm(){normalisePlayers();let original=q('pOriginalName').value.trim();let name=q('pName').value.trim();let rating=+q('pRating').value||3;let active=q('pActive').value!=='false';let notes=q('pNotes').value.trim();if(!name){q('playerStatus').textContent='Enter a player name.';return;}let existing=players.find(x=>x.name===name);if(original && original!==name){if(existing){q('playerStatus').textContent='Cannot rename: another player already has that name.';return;}players.forEach(p=>{if(p.name===original){p.name=name;p.rating=rating;p.active=active;p.notes=notes;}});matches=matches.map(m=>m.map(v=>v===original?name:v));}else if(existing){existing.rating=rating;existing.active=active;existing.notes=notes;}else{players.push({name,rating,active,notes});}clearPlayerForm();save();renderAll();}
+function togglePlayer(name){normalisePlayers();let p=players.find(x=>x.name===name);if(!p)return;p.active=p.active===false;save();renderAll();}
+function hardDeletePlayer(name){let used=matches.some(m=>m.slice(2,6).includes(name));if(used){alert('This player appears in match history. Deactivate instead to preserve historical records.');return;}if(confirm('Delete '+name+' permanently?')){players=players.filter(p=>p.name!==name);save();renderAll();}}
+function addPlayer(){savePlayerForm();}
+function removePlayer(name){togglePlayer(name);}
+function renderTrend(){let name=q('trendPlayer').value||Object.keys(calc.st).sort()[0];q('trendPlayer').value=name||'';let s=calc.st[name];if(!s){q('trendStats').innerHTML='';return;}lineChart('trendChart',s.trend.map((x,i)=>({x:i,y:x.r,label:x.date||'Start'})));q('trendStats').innerHTML=`<p><b>${name}</b>: current <span class="accent">${fmt(s.rating)}</span>, games ${s.games}, record ${s.w}-${s.l}, confidence ${Math.round(s.conf)}%.</p>`;}
+function renderPartners(){let data={};calc.hist.forEach(h=>{[[h.a1,h.a2,h.as>h.bs,h.as,h.bs,h.delta],[h.b1,h.b2,h.bs>h.as,h.bs,h.as,-h.delta]].forEach(x=>{let k=pair(x[0],x[1]);data[k]??={pair:k,g:0,w:0,pf:0,pa:0,delta:0};data[k].g++;if(x[2])data[k].w++;data[k].pf+=x[3];data[k].pa+=x[4];data[k].delta+=x[5];});});let arr=Object.values(data).sort((a,b)=>b.g-a.g||b.w/b.g-a.w/a.g);q('partnerTable').innerHTML='<tr><th>Pair</th><th>Games</th><th>Record</th><th>Win %</th><th>Avg Score Share</th><th>Rating Impact</th></tr>'+arr.map(x=>`<tr><td>${x.pair}</td><td class="num">${x.g}</td><td>${x.w}-${x.g-x.w}</td><td class="num">${pct(x.w/x.g)}</td><td class="num">${pct(x.pf/(x.pf+x.pa))}</td><td class="num ${x.delta>=0?'good':'bad'}">${x.delta>=0?'+':''}${fmt(x.delta)}</td></tr>`).join('');}
+function renderH2H(){let name=q('h2hPlayer').value||Object.keys(calc.st).sort()[0];q('h2hPlayer').value=name||'';let d={};calc.hist.forEach(h=>{let side=null,opps=[],win=false,pf=0,pa=0;if([h.a1,h.a2].includes(name)){opps=[h.b1,h.b2];win=h.as>h.bs;pf=h.as;pa=h.bs;}else if([h.b1,h.b2].includes(name)){opps=[h.a1,h.a2];win=h.bs>h.as;pf=h.bs;pa=h.as;}else return;opps.forEach(o=>{d[o]??={opp:o,g:0,w:0,pf:0,pa:0};d[o].g++;if(win)d[o].w++;d[o].pf+=pf;d[o].pa+=pa;});});let arr=Object.values(d).sort((a,b)=>b.g-a.g);q('h2hTable').innerHTML='<tr><th>Opponent</th><th>Games</th><th>Record</th><th>Win %</th><th>Points For</th><th>Points Against</th></tr>'+arr.map(x=>`<tr><td>${x.opp}</td><td class="num">${x.g}</td><td>${x.w}-${x.g-x.w}</td><td class="num">${pct(x.w/x.g)}</td><td class="num">${x.pf}</td><td class="num">${x.pa}</td></tr>`).join('');}
+function renderHistory(){q('matchHistory').innerHTML='<tr><th>#</th><th>Date</th><th>Team A</th><th>Score</th><th>Team B</th><th>Winner</th><th>Expected A</th><th>Actual A</th><th>Base Δ</th></tr>'+calc.hist.slice().reverse().map(h=>`<tr><td>${h.idx}</td><td>${h.date}</td><td>${h.a1} / ${h.a2}</td><td>${h.as}-${h.bs}</td><td>${h.b1} / ${h.b2}</td><td>${h.win}</td><td class="num">${pct(h.expA)}</td><td class="num">${pct(h.actA)}</td><td class="num ${h.delta>=0?'good':'bad'}">${h.delta>=0?'+':''}${fmt(h.delta)}</td></tr>`).join('');}
+function addMatch(){let m=[q('mDate').value,q('mType').value,q('a1').value,q('a2').value,q('b1').value,q('b2').value,+q('as').value,+q('bs').value,q('notes').value];let ps=m.slice(2,6);if(new Set(ps).size<4||ps.some(x=>!x)){alert('Select four different players.');return;}if(isNaN(m[6])||isNaN(m[7])){alert('Enter valid scores.');return;}matches.push(m);save();renderAll();}
+function clearMatches(){if(confirm('Clear all matches?')){matches=[];save();renderAll();}}
+function resetAll(){if(confirm('Reset players, matches and settings to sample data?')){players=samplePlayers;matches=sampleMatches;settings={baseK:1.15,matureK:.25,provisionalGames:10,scale:1.5,minR:2,maxR:6};save();location.reload();}}
+function saveSettings(){settings={baseK:+q('baseK').value,matureK:+q('matureK').value,provisionalGames:+q('provisionalGames').value,scale:+q('scale').value,minR:+q('minR').value,maxR:+q('maxR').value};save();renderAll();}
+function toCsv(){let rows=[['Date','Match Type','Team A Player 1','Team A Player 2','Team B Player 1','Team B Player 2','Team A Score','Team B Score','Notes'],...matches];return rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');}
+function parseDelimited(text){
+  text = String(text || '').replace(/^\uFEFF/, '').trim();
+  if (!text) return [];
+  const firstLine = text.split(/\r?\n/)[0] || '';
+  const delimiter = (firstLine.match(/\t/g)||[]).length > (firstLine.match(/,/g)||[]).length ? '\t' : ',';
+  let rows=[], row=[], cur='', qte=false;
+  for(let i=0;i<text.length;i++){
+    let c=text[i], n=text[i+1];
+    if(c==='"' && qte && n==='"'){cur+='"'; i++;}
+    else if(c==='"'){qte=!qte;}
+    else if(c===delimiter && !qte){row.push(cur.trim()); cur='';}
+    else if((c==='\n'||c==='\r') && !qte){
+      row.push(cur.trim());
+      if(row.some(v=>v!=='')) rows.push(row);
+      row=[]; cur='';
+      if(c==='\r' && n==='\n') i++;
+    } else cur+=c;
+  }
+  row.push(cur.trim());
+  if(row.some(v=>v!=='')) rows.push(row);
+  return rows;
+}
+function parseCsv(t){return parseDelimited(t);}
+function normaliseHeader(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function importCsv(){
+  const raw = q('csvInput').value;
+  const rows = parseDelimited(raw);
+  const status = q('importStatus');
+  if(!rows.length){ if(status) status.textContent='Nothing to import. Paste the Match_Log CSV/TSV first.'; return; }
+
+  const aliases = {
+    date:['date','matchdate'],
+    type:['matchtype','type'],
+    a1:['teamaplayer1','teama1','a1','playera1'],
+    a2:['teamaplayer2','teama2','a2','playera2'],
+    b1:['teambplayer1','teamb1','b1','playerb1'],
+    b2:['teambplayer2','teamb2','b2','playerb2'],
+    as:['teamascore','ascore','scorea','teama'],
+    bs:['teambscore','bscore','scoreb','teamb'],
+    notes:['notes','note','remarks','remark']
+  };
+
+  let header = rows[0].map(normaliseHeader);
+  let hasHeader = Object.values(aliases).some(list => list.some(a => header.includes(a)));
+  let dataRows = hasHeader ? rows.slice(1) : rows;
+  const idx = {};
+  if(hasHeader){
+    for(const [key,list] of Object.entries(aliases)){
+      idx[key] = header.findIndex(h => list.includes(h));
+    }
+  } else {
+    Object.assign(idx,{date:0,type:1,a1:2,a2:3,b1:4,b2:5,as:6,bs:7,notes:8});
+  }
+  const val = (r, key) => idx[key] >= 0 ? (r[idx[key]] ?? '').trim() : '';
+
+  let imported = [], rejected = [];
+  dataRows.forEach((r, i) => {
+    if(!r || !r.some(v => String(v||'').trim() !== '')) return;
+    const m = [
+      val(r,'date'),
+      val(r,'type') || 'Doubles',
+      val(r,'a1'),
+      val(r,'a2'),
+      val(r,'b1'),
+      val(r,'b2'),
+      Number(val(r,'as')),
+      Number(val(r,'bs')),
+      val(r,'notes') || ''
+    ];
+    const names = m.slice(2,6);
+    if(!m[0] || names.some(x=>!x) || new Set(names).size < 4 || !Number.isFinite(m[6]) || !Number.isFinite(m[7])){
+      rejected.push(i+1);
+      return;
+    }
+    imported.push(m);
+    names.forEach(name => { if(!players.some(p => p.name === name)) players.push({name, rating:3}); });
+  });
+
+  if(!imported.length){
+    if(status) status.textContent = `No valid matches imported. Check headers and scores. Rejected rows: ${rejected.length}.`;
+    return;
+  }
+  matches = imported;
+  save();
+  renderAll();
+  if(status) status.textContent = `Imported ${imported.length} matches${rejected.length ? `; rejected ${rejected.length} invalid row(s)` : ''}. Unknown players were auto-added at 3.000 starting rating.`;
+}
+function loadSample(){q('csvInput').value=toCsv();}
+function copyCsv(){navigator.clipboard?.writeText(toCsv());q('csvOutput').select();}
+function downloadCsv(){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([toCsv()],{type:'text/csv'}));a.download='pickleball_match_log.csv';a.click();}
+function lineChart(id,data){let svg=q(id),w=900,h=260,p=34;if(!data.length){svg.innerHTML='';return;}let min=Math.min(...data.map(d=>d.y),2.5),max=Math.max(...data.map(d=>d.y),3.5);if(max-min<.2){max+=.1;min-=.1;}let pts=data.map((d,i)=>[p+(w-2*p)*(i/(Math.max(1,data.length-1))),h-p-(h-2*p)*((d.y-min)/(max-min))]);let path=pts.map((p,i)=>(i?'L':'M')+p[0]+','+p[1]).join(' ');svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.innerHTML=`<line x1="${p}" y1="${h-p}" x2="${w-p}" y2="${h-p}" stroke="#334155"/><line x1="${p}" y1="${p}" x2="${p}" y2="${h-p}" stroke="#334155"/><path d="${path}" fill="none" stroke="#38bdf8" stroke-width="3"/>`+pts.map((pt,i)=>`<circle cx="${pt[0]}" cy="${pt[1]}" r="4" fill="#38bdf8"><title>${data[i].label}: ${fmt(data[i].y)}</title></circle>`).join('')+`<text x="${p}" y="20" fill="#94a3b8" font-size="12">${fmt(max)} </text><text x="${p}" y="${h-8}" fill="#94a3b8" font-size="12">${fmt(min)}</text>`;}
+function barChart(id,data,min,max){let svg=q(id),w=900,h=260,p=34;svg.setAttribute('viewBox',`0 0 ${w} ${h}`);let bw=(w-2*p)/Math.max(1,data.length);svg.innerHTML=data.map((d,i)=>{let bh=(h-2*p)*((d.value-min)/(max-min));let x=p+i*bw+6,y=h-p-bh;return `<rect x="${x}" y="${y}" width="${Math.max(8,bw-12)}" height="${bh}" rx="4" fill="#38bdf8"><title>${d.label}: ${fmt(d.value)}</title></rect><text x="${x}" y="${h-10}" fill="#cbd5e1" font-size="12" transform="rotate(-25 ${x},${h-10})">${d.label}</text><text x="${x}" y="${y-5}" fill="#cbd5e1" font-size="11">${fmt(d.value)}</text>`}).join('');}
+
+let cloudSaveTimer=null;
+function setCloudStatus(msg, good=false){const el=q('cloudStatus'); if(el){el.innerHTML=msg; el.style.borderLeftColor=good?'#22c55e':'#38bdf8';}}
+function saveCloudConfig(){
+  cloud.url=(q('cloudUrl')?.value||'').trim();
+  cloud.auto=!!q('autoSync')?.checked;
+  localStorage.setItem('pb_cloud',JSON.stringify(cloud));
+  setCloudStatus(cloud.url ? `Cloud URL saved. Auto-save is ${cloud.auto?'ON':'OFF'}.` : 'Cloud sync is not configured yet.', !!cloud.url);
+}
+function initCloudFields(){
+  if(q('cloudUrl')) q('cloudUrl').value=cloud.url||'';
+  if(q('autoSync')) q('autoSync').checked=!!cloud.auto;
+  if(q('cloudStatus')) setCloudStatus(cloud.url ? `Cloud sync configured. Auto-save is ${cloud.auto?'ON':'OFF'}.` : 'Cloud sync is not configured yet.', !!cloud.url);
+}
+function payload(){return {players,matches,settings,updatedAt:new Date().toISOString(),source:'Private Pickleball Mock DUPR Dashboard'};}
+function queueCloudSave(){clearTimeout(cloudSaveTimer); cloudSaveTimer=setTimeout(()=>saveToCloud(true),700);}
+async function saveToCloud(silent=false){
+  if(!cloud.url){if(!silent) setCloudStatus('Paste and save your Apps Script Web App URL first.'); return;}
+  try{
+    if(!silent) setCloudStatus('Saving to shared Google Sheet...');
+    const res=await fetch(cloud.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'save',data:payload()})});
+    const txt=await res.text(); let out={}; try{out=JSON.parse(txt)}catch(e){}
+    if(out.ok===false) throw new Error(out.error||'Apps Script returned an error.');
+    if(!silent) setCloudStatus(`Saved to cloud at ${new Date().toLocaleString()}.`, true);
+  }catch(err){setCloudStatus('Cloud save failed: '+err.message+'<br><span class="muted">Check deployment access and that the URL ends with /exec.</span>');}
+}
+async function loadFromCloud(){
+  if(!cloud.url){setCloudStatus('Paste and save your Apps Script Web App URL first.'); return;}
+  try{
+    setCloudStatus('Loading latest shared data...');
+    const res=await fetch(cloud.url+'?action=load&ts='+Date.now());
+    const txt=await res.text(); const out=JSON.parse(txt);
+    if(!out.ok) throw new Error(out.error||'Apps Script returned an error.');
+    if(out.data?.players){ players=out.data.players; normalisePlayers(); }
+    if(out.data?.matches) matches=out.data.matches;
+    if(out.data?.settings) settings=out.data.settings;
+    localStorage.setItem('pb_players',JSON.stringify(players));
+    localStorage.setItem('pb_matches',JSON.stringify(matches));
+    localStorage.setItem('pb_settings',JSON.stringify(settings));
+    q('baseK').value=settings.baseK;q('matureK').value=settings.matureK;q('provisionalGames').value=settings.provisionalGames;q('scale').value=settings.scale;q('minR').value=settings.minR;q('maxR').value=settings.maxR;
+    renderAll();
+    setCloudStatus(`Loaded ${players.length} players and ${matches.length} matches from cloud${out.updatedAt ? ' — last updated '+out.updatedAt : ''}.`, true);
+  }catch(err){setCloudStatus('Cloud load failed: '+err.message+'<br><span class="muted">Check deployment access and that the URL ends with /exec.</span>');}
+}
+
+function showPage(tabId){
+  document.querySelectorAll('.tab').forEach(btn=>btn.classList.toggle('active', btn.dataset.tab===tabId));
+  document.querySelectorAll('.page').forEach(page=>{
+    const isActive = page.id === tabId;
+    page.classList.toggle('hidden', !isActive);
+    page.classList.toggle('active-page', isActive);
+  });
+  if (typeof renderAll === 'function') renderAll();
+}
+document.querySelector('.tabs').addEventListener('click', function(e){
+  const btn = e.target.closest('.tab');
+  if (!btn) return;
+  e.preventDefault();
+  showPage(btn.dataset.tab);
+});
+q('baseK').value=settings.baseK;q('matureK').value=settings.matureK;q('provisionalGames').value=settings.provisionalGames;q('scale').value=settings.scale;q('minR').value=settings.minR;q('maxR').value=settings.maxR;initCloudFields();renderAll();
+</script>
+</body>
+</html>
