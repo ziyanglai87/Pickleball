@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Private Pickleball DUPR Dashboard v7 Full</title>
+<style>
+:root{
+  --bg:#0f172a;--panel:#111827;--card:#1e293b;--muted:#94a3b8;--text:#f8fafc;
+  --line:#334155;--accent:#2563eb;--accent2:#38bdf8;--danger:#ef4444;--good:#22c55e;--warn:#f59e0b;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#111827,#1e293b);border-bottom:1px solid var(--line);padding:14px 16px}
+header h1{font-size:18px;margin:0}
+header p{margin:4px 0 0;color:var(--muted);font-size:12px}
+main{padding:14px 14px 86px;max-width:1180px;margin:0 auto}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:10px 0;margin-bottom:8px}
+.tab-btn{white-space:nowrap;border:1px solid var(--line);background:#172033;color:var(--text);border-radius:999px;padding:10px 12px;font-weight:700}
+.tab-btn.active{background:var(--accent);border-color:var(--accent)}
+.mobile-nav{display:none}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.col-12{grid-column:span 12}.col-8{grid-column:span 8}.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}
+h2{font-size:17px;margin:0 0 10px} h3{font-size:14px;margin:0 0 8px;color:#e2e8f0}
+label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+input,select,textarea{width:100%;padding:11px;border-radius:10px;border:1px solid #475569;background:#0b1220;color:var(--text);font-size:15px}
+textarea{min-height:70px}
+button{cursor:pointer}
+.action{width:100%;margin-top:10px;padding:12px;border:0;border-radius:12px;background:var(--accent);color:white;font-weight:800;font-size:15px}
+.secondary{background:#334155}.danger{background:var(--danger)}.good{background:var(--good);color:#052e16}.warn{background:var(--warn);color:#422006}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.hidden{display:none!important}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:680px}
+th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top}
+th{color:#cbd5e1;background:#172033;position:static}
+.metric{font-size:26px;font-weight:900}.sub{color:var(--muted);font-size:12px}.pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;background:#334155}
+.player-card{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:8px;background:#172033}
+.player-card strong{font-size:15px}.player-card small{display:block;color:var(--muted);margin-top:2px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{background:#172033;border:1px solid var(--line);border-radius:14px;padding:12px}
+.tab{display:block}
+.notice{background:#0b1220;border:1px dashed #475569;border-radius:12px;padding:10px;color:#cbd5e1;font-size:13px;margin:8px 0}
+@media(max-width:768px){
+  header{padding:12px 14px;padding-top:calc(12px + env(safe-area-inset-top))}
+  header h1{font-size:16px}.tabs{display:none}
+  main{padding:12px 12px calc(92px + env(safe-area-inset-bottom))}
+  .grid{display:block}.card{margin-bottom:12px;border-radius:14px;padding:13px}
+  .row{display:block}.row>*{margin-bottom:8px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .mobile-nav{display:grid;position:fixed;bottom:0;left:0;right:0;z-index:30;grid-template-columns:repeat(5,1fr);background:#111827;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  .mobile-nav button{border:0;background:transparent;color:#e2e8f0;padding:10px 4px;font-size:11px;font-weight:700}
+  .mobile-nav button.active{color:#60a5fa}
+  table{min-width:720px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Private Pickleball DUPR Dashboard</h1>
+  <p>v8 full production · mobile + desktop · provisional DUPR-style model</p>
+</header>
+
+<main>
+  <div class="tabs" id="desktopTabs"></div>
+
+  <section id="tab-overview" class="tab">
+    <div class="grid">
+      <div class="card col-12">
+        <h2>Overview</h2>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="metric" id="kpiPlayers">0</div><div class="sub">Active players</div></div>
+          <div class="kpi"><div class="metric" id="kpiMatches">0</div><div class="sub">Matches logged</div></div>
+          <div class="kpi"><div class="metric" id="kpiTop">-</div><div class="sub">Top rating</div></div>
+          <div class="kpi"><div class="metric" id="kpiAvg">-</div><div class="sub">Average rating</div></div>
+        </div>
+        <div class="notice">Use Player Management to add players, Match Entry to log games, and Cloud Sync to connect to Google Sheets via Apps Script.</div>
+      </div>
+      <div class="card col-6">
+        <h2>Leaderboard</h2>
+        <div id="leaderboardCards"></div>
+      </div>
+      <div class="card col-6">
+        <h2>Recent Matches</h2>
+        <div id="recentMatches"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-players" class="tab hidden">
+    <div class="grid">
+      <div class="card col-4">
+        <h2>Player Management</h2>
+        <input type="hidden" id="editPlayerId">
+        <label>Name</label><input id="playerName" placeholder="e.g. Zi Yang">
+        <label>Starting / Seed Rating</label><input id="playerSeed" type="number" step="0.001" value="3.500">
+        <label>Notes</label><textarea id="playerNotes" placeholder="Optional"></textarea>
+        <button class="action" onclick="savePlayer()">Add / Update Player</button>
+        <button class="action secondary" onclick="clearPlayerForm()">Clear Form</button>
+      </div>
+      <div class="card col-8">
+        <h2>Players</h2>
+        <div id="playersList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-matches" class="tab hidden">
+    <div class="grid">
+      <div class="card col-4">
+        <h2>Log Doubles Match</h2>
+        <label>Date</label><input id="matchDate" type="date">
+        <div class="row"><div><label>Team A Player 1</label><select id="a1"></select></div><div><label>Team A Player 2</label><select id="a2"></select></div></div>
+        <div class="row"><div><label>Team B Player 1</label><select id="b1"></select></div><div><label>Team B Player 2</label><select id="b2"></select></div></div>
+        <div class="row"><div><label>Team A Score</label><input id="scoreA" type="number" value="11"></div><div><label>Team B Score</label><input id="scoreB" type="number" value="9"></div></div>
+        <button class="action" onclick="addMatch()">Save Match + Recalculate</button>
+      </div>
+      <div class="card col-8">
+        <h2>Match History</h2>
+        <div class="table-wrap"><table><thead><tr><th>Date</th><th>Team A</th><th>Score</th><th>Team B</th><th>Winner</th><th></th></tr></thead><tbody id="matchTable"></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-ratings" class="tab hidden">
+    <div class="card">
+      <h2>Ratings History</h2>
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Match</th><th>Player</th><th>Old</th><th>New</th><th>Change</th></tr></thead><tbody id="ratingsTable"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="tab-analytics" class="tab hidden">
+    <div class="grid">
+      <div class="card col-6"><h2>Partner Chemistry</h2><div class="table-wrap"><table><thead><tr><th>Pair</th><th>Matches</th><th>Wins</th><th>Win %</th></tr></thead><tbody id="partnerTable"></tbody></table></div></div>
+      <div class="card col-6"><h2>Head-to-Head</h2><div class="table-wrap"><table><thead><tr><th>Matchup</th><th>Matches</th><th>A Wins</th><th>B Wins</th></tr></thead><tbody id="h2hTable"></tbody></table></div></div>
+    </div>
+  </section>
+
+  <section id="tab-cloud" class="tab hidden">
+    <div class="grid">
+      <div class="card col-6">
+        <h2>Cloud Sync</h2>
+        <label>Apps Script Web App /exec URL</label><input id="endpoint" placeholder="https://script.google.com/macros/s/.../exec">
+        <button class="action" onclick="saveEndpoint()">Save Endpoint</button>
+        <button class="action good" onclick="loadCloud()">Load from Cloud</button>
+        <button class="action warn" onclick="saveCloud()">Save to Cloud</button>
+        <div class="notice" id="cloudStatus">No cloud action yet.</div>
+      </div>
+      <div class="card col-6">
+        <h2>Import / Export</h2>
+        <button class="action secondary" onclick="exportJson()">Export JSON Backup</button>
+        <label>Import JSON Backup</label><textarea id="importBox" placeholder="Paste exported JSON here"></textarea>
+        <button class="action secondary" onclick="importJson()">Import JSON</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="mobile-nav" id="mobileTabs"></nav>
+
+<script>
+const START_RATING=3.5, MIN_RATING=2.0, MAX_RATING=8.0, PROVISIONAL_MATCHES=20, BASE_K=0.58;
+let state={players:[],matches:[],history:[]};
+
+const tabs=[
+ ['overview','Overview'],['players','Players'],['matches','Matches'],['ratings','Ratings'],['analytics','Analytics'],['cloud','Cloud']
+];
+
+function init(){
+ document.getElementById('matchDate').value=new Date().toISOString().slice(0,10);
+ const saved=localStorage.getItem('pb_dupr_v7_state');
+ if(saved){try{state=JSON.parse(saved)}catch(e){}}
+ const ep=localStorage.getItem('pb_dupr_endpoint'); if(ep) document.getElementById('endpoint').value=ep;
+ renderTabs(); recalcAll(); render();
+}
+function renderTabs(){
+ const d=document.getElementById('desktopTabs'), m=document.getElementById('mobileTabs');
+ d.innerHTML=''; m.innerHTML='';
+ tabs.forEach(([id,label],i)=>{
+  const b=document.createElement('button'); b.className='tab-btn '+(i===0?'active':''); b.textContent=label; b.onclick=()=>showTab(id); d.appendChild(b);
+  const mb=document.createElement('button'); mb.className=i===0?'active':''; mb.textContent=label; mb.onclick=()=>showTab(id); m.appendChild(mb);
+ });
+}
+function showTab(id){
+ document.querySelectorAll('.tab').forEach(x=>x.classList.add('hidden'));
+ document.getElementById('tab-'+id).classList.remove('hidden');
+ [...document.querySelectorAll('.tab-btn')].forEach((b,i)=>b.classList.toggle('active',tabs[i][0]===id));
+ [...document.querySelectorAll('.mobile-nav button')].forEach((b,i)=>b.classList.toggle('active',tabs[i][0]===id));
+}
+function uid(prefix){return prefix+Math.random().toString(36).slice(2,8).toUpperCase()}
+function saveLocal(){localStorage.setItem('pb_dupr_v7_state',JSON.stringify(state))}
+function activePlayers(){return state.players.filter(p=>p.active!==false)}
+function byId(id){return state.players.find(p=>p.id===id)}
+function playerName(id){return byId(id)?.name||id}
+
+function savePlayer(){
+ const name=document.getElementById('playerName').value.trim(); if(!name)return alert('Enter player name');
+ const seed=parseFloat(document.getElementById('playerSeed').value)||START_RATING;
+ const notes=document.getElementById('playerNotes').value.trim();
+ const edit=document.getElementById('editPlayerId').value;
+ if(edit){
+  const p=byId(edit); if(p){p.name=name;p.seed=seed;p.notes=notes;p.active=true}
+ }else{
+  if(state.players.some(p=>p.name.toLowerCase()===name.toLowerCase())) return alert('Player already exists');
+  state.players.push({id:uid('P'),name,seed,rating:seed,matches:0,reliability:0,active:true,notes});
+ }
+ clearPlayerForm(); recalcAll(); render(); saveLocal();
+}
+function clearPlayerForm(){document.getElementById('editPlayerId').value='';document.getElementById('playerName').value='';document.getElementById('playerSeed').value='3.500';document.getElementById('playerNotes').value=''}
+function editPlayer(id){const p=byId(id);if(!p)return;document.getElementById('editPlayerId').value=id;document.getElementById('playerName').value=p.name;document.getElementById('playerSeed').value=(p.seed??START_RATING).toFixed(3);document.getElementById('playerNotes').value=p.notes||'';showTab('players')}
+function togglePlayer(id){const p=byId(id); if(!p)return; p.active=!p.active; render(); saveLocal()}
+function hardDeletePlayer(id){
+ if(state.matches.some(m=>[m.a1,m.a2,m.b1,m.b2].includes(id))) return alert('Cannot hard delete: player has match history. Deactivate instead.');
+ state.players=state.players.filter(p=>p.id!==id); render(); saveLocal();
+}
+
+function fillSelects(){
+ const ids=['a1','a2','b1','b2']; ids.forEach(id=>{const s=document.getElementById(id);s.innerHTML=''; activePlayers().forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;s.appendChild(o)})});
+}
+function addMatch(){
+ const m={id:uid('M'),date:document.getElementById('matchDate').value||new Date().toISOString().slice(0,10),
+ a1:a1.value,a2:a2.value,b1:b1.value,b2:b2.value,sa:+scoreA.value,sb:+scoreB.value,type:'Doubles'};
+ if(new Set([m.a1,m.a2,m.b1,m.b2]).size<4)return alert('Choose four different players');
+ if(m.sa===m.sb)return alert('Scores cannot be tied');
+ state.matches.push(m); recalcAll(); render(); saveLocal();
+}
+function deleteMatch(id){state.matches=state.matches.filter(m=>m.id!==id); recalcAll(); render(); saveLocal()}
+
+function expected(team,opp){return 1/(1+Math.pow(10,(opp-team)/0.75))}
+function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+function recalcAll(){
+ state.history=[];
+ state.players.forEach(p=>{p.rating=p.seed??START_RATING;p.matches=0;p.reliability=0});
+ const sorted=[...state.matches].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+ sorted.forEach(m=>{
+  const A=[byId(m.a1),byId(m.a2)], B=[byId(m.b1),byId(m.b2)];
+  if(A.some(x=>!x)||B.some(x=>!x))return;
+  const ra=(A[0].rating+A[1].rating)/2, rb=(B[0].rating+B[1].rating)/2;
+  const total=m.sa+m.sb, actualA=m.sa/total, actualB=m.sb/total;
+  const expA=expected(ra,rb), expB=1-expA;
+  const avgMatches=[...A,...B].reduce((s,p)=>s+p.matches,0)/4;
+  const k=BASE_K*(1+(PROVISIONAL_MATCHES-Math.min(PROVISIONAL_MATCHES,avgMatches))/PROVISIONAL_MATCHES);
+  const deltaA=clamp(k*(actualA-expA),-0.32,0.32), deltaB=clamp(k*(actualB-expB),-0.32,0.32);
+  A.forEach(p=>applyChange(p,m,deltaA)); B.forEach(p=>applyChange(p,m,deltaB));
+ });
+}
+function applyChange(p,m,d){
+ const old=p.rating; p.rating=clamp(p.rating+d,MIN_RATING,MAX_RATING); p.matches++; p.reliability=Math.min(1,p.matches/PROVISIONAL_MATCHES);
+ state.history.push({date:m.date,matchId:m.id,player:p.name,old,new:p.rating,change:p.rating-old});
+}
+
+function render(){
+ fillSelects(); renderPlayers(); renderMatches(); renderLeaderboard(); renderHistory(); renderAnalytics(); renderKpis();
+}
+function renderKpis(){
+ const ap=activePlayers(); kpiPlayers.textContent=ap.length; kpiMatches.textContent=state.matches.length;
+ kpiTop.textContent=ap.length?Math.max(...ap.map(p=>p.rating)).toFixed(3):'-';
+ kpiAvg.textContent=ap.length?(ap.reduce((s,p)=>s+p.rating,0)/ap.length).toFixed(3):'-';
+}
+function renderPlayers(){
+ playersList.innerHTML='';
+ [...state.players].sort((a,b)=>b.rating-a.rating).forEach(p=>{
+  const div=document.createElement('div');div.className='player-card';
+  div.innerHTML=`<div><strong>${p.name}</strong> ${p.active===false?'<span class="pill">Inactive</span>':''}<small>Rating ${p.rating.toFixed(3)} · Matches ${p.matches} · Reliability ${(p.reliability*100).toFixed(0)}%</small><small>${p.notes||''}</small></div>
+  <div style="min-width:110px"><button class="action secondary" onclick="editPlayer('${p.id}')">Edit</button><button class="action ${p.active===false?'good':'warn'}" onclick="togglePlayer('${p.id}')">${p.active===false?'Reactivate':'Deactivate'}</button><button class="action danger" onclick="hardDeletePlayer('${p.id}')">Delete</button></div>`;
+  playersList.appendChild(div);
+ });
+}
+function renderLeaderboard(){
+ const arr=[...activePlayers()].sort((a,b)=>b.rating-a.rating);
+ leaderboardCards.innerHTML=arr.map((p,i)=>`<div class="player-card"><div><strong>#${i+1} ${p.name}</strong><small>${p.matches} matches · ${(p.reliability*100).toFixed(0)}% reliability</small></div><div class="metric">${p.rating.toFixed(3)}</div></div>`).join('')||'<div class="notice">No players yet.</div>';
+}
+function renderMatches(){
+ matchTable.innerHTML=[...state.matches].reverse().map(m=>`<tr><td>${m.date}</td><td>${playerName(m.a1)} / ${playerName(m.a2)}</td><td>${m.sa}-${m.sb}</td><td>${playerName(m.b1)} / ${playerName(m.b2)}</td><td>${m.sa>m.sb?'Team A':'Team B'}</td><td><button onclick="deleteMatch('${m.id}')">Delete</button></td></tr>`).join('');
+ recentMatches.innerHTML=[...state.matches].slice(-5).reverse().map(m=>`<div class="player-card"><div><strong>${m.sa}-${m.sb}</strong><small>${playerName(m.a1)} / ${playerName(m.a2)} vs ${playerName(m.b1)} / ${playerName(m.b2)}</small></div><span class="pill">${m.date}</span></div>`).join('')||'<div class="notice">No matches yet.</div>';
+}
+function renderHistory(){
+ ratingsTable.innerHTML=[...state.history].reverse().map(h=>`<tr><td>${h.date}</td><td>${h.matchId}</td><td>${h.player}</td><td>${h.old.toFixed(3)}</td><td>${h.new.toFixed(3)}</td><td>${h.change>=0?'+':''}${h.change.toFixed(3)}</td></tr>`).join('');
+}
+function pairKey(a,b){return [playerName(a),playerName(b)].sort().join(' / ')}
+function renderAnalytics(){
+ const partners={}, h2h={};
+ state.matches.forEach(m=>{
+  const aw=m.sa>m.sb, pa=pairKey(m.a1,m.a2), pb=pairKey(m.b1,m.b2);
+  partners[pa]??={m:0,w:0}; partners[pb]??={m:0,w:0}; partners[pa].m++;partners[pb].m++; if(aw)partners[pa].w++;else partners[pb].w++;
+  const key=[pa,pb].sort().join(' vs '); h2h[key]??={m:0,a:0,b:0,label:key}; h2h[key].m++; if(aw){h2h[key].a += key.startsWith(pa)?1:0; h2h[key].b += key.startsWith(pa)?0:1}else{h2h[key].a += key.startsWith(pb)?1:0; h2h[key].b += key.startsWith(pb)?0:1}
+ });
+ partnerTable.innerHTML=Object.entries(partners).map(([k,v])=>`<tr><td>${k}</td><td>${v.m}</td><td>${v.w}</td><td>${(100*v.w/v.m).toFixed(0)}%</td></tr>`).join('');
+ h2hTable.innerHTML=Object.values(h2h).map(v=>`<tr><td>${v.label}</td><td>${v.m}</td><td>${v.a}</td><td>${v.b}</td></tr>`).join('');
+}
+function saveEndpoint(){localStorage.setItem('pb_dupr_endpoint',endpoint.value.trim());cloudStatus.textContent='Endpoint saved locally.'}
+async function loadCloud(){
+ const url=endpoint.value.trim(); if(!url)return alert('Paste Apps Script URL');
+ cloudStatus.textContent='Loading...';
+ try{const r=await fetch(url); const data=await r.json(); state=data; recalcAll(); render(); saveLocal(); cloudStatus.textContent='Loaded from cloud.'}catch(e){cloudStatus.textContent='Cloud load failed: '+e.message}
+}
+async function saveCloud(){
+ const url=endpoint.value.trim(); if(!url)return alert('Paste Apps Script URL');
+ cloudStatus.textContent='Saving...';
+ try{await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(state)}); cloudStatus.textContent='Save sent. Reload cloud on another device to verify.'}catch(e){cloudStatus.textContent='Cloud save failed: '+e.message}
+}
+function exportJson(){navigator.clipboard?.writeText(JSON.stringify(state,null,2)); alert('JSON backup copied to clipboard.')}
+function importJson(){try{state=JSON.parse(importBox.value);recalcAll();render();saveLocal();alert('Imported.')}catch(e){alert('Invalid JSON')}}
+init();
+</script>
+</body>
+</html>
